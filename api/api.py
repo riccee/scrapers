@@ -13,7 +13,7 @@ import asyncio
 
 app = Flask(__name__)
 
-@app.route('/domain_info')
+@app.route('/api/domain_info')
 async def get_domain_info() -> None:
     url = input()
     async with async_playwright() as playwright:
