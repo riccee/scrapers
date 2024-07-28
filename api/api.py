@@ -1,5 +1,5 @@
 
-from flask import Flask
+from flask import Flask, request, jsonify
 from urllib.parse import urljoin
 from playwright.async_api import async_playwright
 from apify import Actor
@@ -9,13 +9,12 @@ import requests
 from employees import search
 import asyncio
 
-
-
 app = Flask(__name__)
+CORS(app)
 
-@app.route('/api/domain_info')
+@app.route('/api/domain_info', methods=['POST'])
 async def get_domain_info() -> None:
-    url = input()
+    url = request.get_json()
     async with async_playwright() as playwright:
         browser = await playwright.chromium.launch(headless=False)
         context = await browser.new_context()
