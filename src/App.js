@@ -11,14 +11,14 @@ export default function Home() {
     e.preventDefault();
 
     setLoading(true);
-    //const apiRes = await fetch('https://api.apify.com/v2/acts/riccee~advanced-similarweb-scraper/run-sync-get-dataset-items?token=apify_api_gd9hPlqKDqQ8loIQLYZrl0KirXwDWA09O0AO', {
-    //  method: 'POST',
-    //  headers: {
-    //    'Content-Type': 'application/json',
-    //  },
-    //  body: JSON.stringify({ domain: inputValue }),
-    //});
-   const apiRes = await fetch('/api/domain_info')
+   const apiRes = await fetch('/api/domain_info', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ domain: inputValue }),
+    });
+   console.log(apiRes);
    const data = await apiRes.json();
    setLoading(false);
    setResponse(data);
