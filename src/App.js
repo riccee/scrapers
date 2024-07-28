@@ -26,8 +26,8 @@ export default function Home() {
 
 
   const jsonStyle = {
-    propertyStyle: { color: 'white' },
-    stringStyle: { color: 'lightgreen' },
+    propertyStyle: { color: 'black' },
+    stringStyle: { color: 'black' },
     numberStyle: { color: 'darkorange' }
   }
 
