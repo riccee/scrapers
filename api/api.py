@@ -1,22 +1,25 @@
-
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from urllib.parse import urljoin
 from playwright.async_api import async_playwright
-from apify import Actor
-import json
 from bs4 import BeautifulSoup
-import requests
-from employees import search
 import asyncio
+from employees import search
+import requests
+import json
 
 app = Flask(__name__)
 CORS(app)
 
 @app.route('/api/domain_info', methods=['POST'])
-async def get_domain_info() -> None:
+async def get_domain_info():
+    ompetitors = {}
+    overview = {}
     url = request.get_json()
+    url = url.get('domain')
     async with async_playwright() as playwright:
-        browser = await playwright.chromium.launch(headless=False)
+        browser = await playwright.chromium.launch(headless=True)
+        #Actor.config.headless
         context = await browser.new_context()
         try:
             # Open the URL in a new Playwright page
@@ -27,6 +30,7 @@ async def get_domain_info() -> None:
                 await page.click('.app-more-less-text__button')
 
 
+            # Push the title of the page into the default dataset
             soup = BeautifulSoup(await page.content())
 
             #Overview
@@ -73,7 +77,7 @@ async def get_domain_info() -> None:
             overview = {'domain': domain, 'description' : description, 'globalRank' : globalRank, 'globalRankChange' : globalRankChange, 'country':country, 'countryRank':countryRank, "totalVisits" :totalVisit}
 
 
-            if actor_input.get('getEmployee'):
+            if True:
                 totalEmployees = []
                 for domain in domains:
                     try:
