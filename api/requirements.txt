@@ -1,0 +1,5 @@
+apify ~= 1.7.0
+playwright ~= 1.39.0
+beautifulsoup4~=4.12.3
+requests~=2.32
+supabase~=2.5
