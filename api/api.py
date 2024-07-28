@@ -1,6 +1,4 @@
-#from flask import Flask, request, jsonify
 from  quart import Quart, request, jsonify
-#from flask_cors import CORS
 from quart_cors import cors
 from urllib.parse import urljoin
 from playwright.async_api import async_playwright
@@ -9,12 +7,11 @@ import asyncio
 from employees import search
 import requests
 import json
-import logging
+from collections import OrderedDict
 
 
 app = Quart(__name__)
 cors(app)
-logging.basicConfig(level=logging.DEBUG)
 
 @app.route('/api/domain_info', methods=['POST'])
 async def get_domain_info():
@@ -94,7 +91,9 @@ async def get_domain_info():
 
             employee = await search(url)
             overview["employees"] = employee
-            return ({'overview': overview, 'competitors': competitors})
+            response_data= {'overview': overview, 'competitors': competitors}
+            return json.dumps(response_data, indent=4)
+            #return OrderedDict([('overview', overview), ('competitors', competitors)])
         except Exception:
             return(f'Cannot extract data from {url}.')
         finally:
