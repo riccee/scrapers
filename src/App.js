@@ -1,25 +1,51 @@
-import logo from './logo.svg';
-import './App.css';
+'use client';
+import JsonFormatter from 'react-json-formatter'
+import { useState } from 'react';
 
-function App() {
+export default function Home() {
+  const [inputValue, setInputValue] = useState('');
+  const [response, setResponse] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async(e) => {
+    e.preventDefault();
+
+    setLoading(true);
+    //const apiRes = await fetch('https://api.apify.com/v2/acts/riccee~advanced-similarweb-scraper/run-sync-get-dataset-items?token=apify_api_gd9hPlqKDqQ8loIQLYZrl0KirXwDWA09O0AO', {
+    //  method: 'POST',
+    //  headers: {
+    //    'Content-Type': 'application/json',
+    //  },
+    //  body: JSON.stringify({ domain: inputValue }),
+    //});
+   const apiRes = await fetch('/api/domain_info')
+   const data = await apiRes.json();
+   setLoading(false);
+   setResponse(data);
+  };
+
+
+  const jsonStyle = {
+    propertyStyle: { color: 'white' },
+    stringStyle: { color: 'lightgreen' },
+    numberStyle: { color: 'darkorange' }
+  }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div style={{ padding: '20px' }}>
+      <form onSubmit={handleSubmit}>
+        <input
+          type="text"
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          required
+          style={{ padding: '10px', marginRight: '10px' }}
+        />
+        <button type="submit" style={{ padding: '10px' }}>Submit</button>
+      </form>
+      {loading && <p>Loading...</p>}
+      {response && < JsonFormatter json={response} tabWith={4} jsonStyle={jsonStyle} />}
     </div>
   );
 }
-
-export default App;
+ 
