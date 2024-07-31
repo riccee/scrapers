@@ -1,3 +1,4 @@
+
 'use client';
 import JsonFormatter from 'react-json-formatter'
 import { useState, useEffect } from 'react';
@@ -8,27 +9,29 @@ import MKInput from "components/MKInput";
 import MKButton from "components/MKButton"
 import { io } from 'socket.io-client';
 import MKProgress from "components/MKProgress";
+import OverviewCard from 'components/overviewcard';
+import CompetitorDetails from 'components/competitordetails';
 
 
-
-//const socket = io('ws://localhost:5000', {path: '/ws'}, {transports: ['websocket']});
 
 
 export default function Home() {
   const [inputValue, setInputValue] = useState('');
   const [response, setResponse] = useState(null);
   const [loading, setLoading] = useState(false);
-//  const [progress, setProgress] = useState(0);
+  const [progress, setProgress] = useState(0);
 
-//  useEffect(() => {
-//    socket.on('progress', (progress) => {
-//      setProgress(progress);
-//    });
+  useEffect(() => {
+    const socket = new WebSocket('ws://localhost:3000/api/ws');
+    socket.onmessage = (event) => {
+      const data = JSON.parse(event.data)
+      setProgress(data.progress);
+    };
 
-//    return () => {
-//      socket.off('progress');
-//    };
-//  }, []);
+    return () => {
+      socket.close('progress');
+    };
+  }, []);
 
   const handleSubmit = async(e) => {
     e.preventDefault();
@@ -67,10 +70,12 @@ export default function Home() {
           required
           style={{ padding: '10px', marginRight: '10px' }}
         />
-        <MKButton variant = "gradient" color = "info" type="submit" style={{ padding: '10px' }}>Submit</MKButton>
+        <MKButton variant = "gradient" color = "info" type="submit" style={{ padding: '10px' }} disabled={loading}>{loading ? 'Submitting...' : 'Submit'}</MKButton>
       </form>
-      {loading && "Loading..."}
-      {response && < JsonFormatter json={response} tabWith={4} jsonStyle={jsonStyle} />}
+      {response && < OverviewCard overview={response.overview} />}
+      {response && response.competitors.map((competitor) => (
+        <CompetitorDetails key={competitor.domain} competitor={competitor} />
+      ))}
     </div>
     </ThemeProvider>
   );
