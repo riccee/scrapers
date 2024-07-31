@@ -1,4 +1,4 @@
-from  quart import Quart, request, jsonify
+from  quart import Quart, request, jsonify, websocket
 from quart_cors import cors
 from urllib.parse import urljoin
 from playwright.async_api import async_playwright
@@ -12,15 +12,24 @@ import socketio
 app = Quart(__name__)
 app = cors(app, allow_origin="*")
 
-sio = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins='*')
-app.add_route('/ws/', socketio.ASGIApp(sio), methods=['OPTION', 'GET', 'POST'])
+async def run_task(progress):
+    await websocket.send_json({'progress': progress})
+
+@app.websocket('/api/ws')
+async def ws():
+    websocket.accept()
+    while True:
+        await websocket.receive()
 
 @app.route('/api/domain_info', methods=['POST', 'PUT', 'GET'])
-async def get_domain_info():
-    competitors = {}
-    overview = {}
-    url = await request.get_json()
-    url = url.get('domain')
+async def get_domain():
+    try:
+        competitors = {}
+        overview = {}
+        url = await request.get_json()
+        url = url.get('domain')
+    except:
+        return []
     async with async_playwright() as playwright:
         browser = await playwright.chromium.launch(headless=True)
         #Actor.config.headless
