@@ -11,24 +11,24 @@ import MKProgress from "components/MKProgress";
 
 
 
-const socket = io('ws://localhost:5000/', {transports: ["websocket"]});
+//const socket = io('ws://localhost:5000', {path: '/ws'}, {transports: ['websocket']});
 
 
 export default function Home() {
   const [inputValue, setInputValue] = useState('');
   const [response, setResponse] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [progress, setProgress] = useState(0);
+//  const [progress, setProgress] = useState(0);
 
-  useEffect(() => {
-    socket.on('progress', (progress) => {
-      setProgress(progress);
-    });
+//  useEffect(() => {
+//    socket.on('progress', (progress) => {
+//      setProgress(progress);
+//    });
 
-    return () => {
-      socket.off('progress');
-    };
-  }, []);
+//    return () => {
+//      socket.off('progress');
+//    };
+//  }, []);
 
   const handleSubmit = async(e) => {
     e.preventDefault();
@@ -69,7 +69,7 @@ export default function Home() {
         />
         <MKButton variant = "gradient" color = "info" type="submit" style={{ padding: '10px' }}>Submit</MKButton>
       </form>
-      {loading && <MKProgress value={progress} />}
+      {loading && "Loading..."}
       {response && < JsonFormatter json={response} tabWith={4} jsonStyle={jsonStyle} />}
     </div>
     </ThemeProvider>
