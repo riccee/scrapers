@@ -9,12 +9,11 @@ import requests
 import json
 import socketio
 
-
 app = Quart(__name__)
-sio = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins='*')
-app.asgi_app = socketio.ASGIApp(sio, app.asgi_app)
 app = cors(app, allow_origin="*")
 
+sio = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins='*')
+app.add_route('/ws/', socketio.ASGIApp(sio), methods=['OPTION', 'GET', 'POST'])
 
 @app.route('/api/domain_info', methods=['POST', 'PUT', 'GET'])
 async def get_domain_info():
