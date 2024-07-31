@@ -3,21 +3,40 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@emotion/cache": "11.10.7",
+    "@emotion/react": "^11.13.0",
+    "@emotion/styled": "^11.13.0",
+    "@mui/icons-material": "5.11.16",
+    "@mui/material": "^5.16.5",
+    "@mui/styled-engine": "5.12.0",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
+    "chroma-js": "2.4.2",
+    "eslint-config-react-app": "^7.0.1",
+    "flatpickr": "4.6.13",
+    "prop-types": "15.8.1",
     "react": "^18.3.1",
+    "react-copy-to-clipboard": "5.1.0",
+    "react-countup": "6.4.2",
     "react-dom": "^18.3.1",
+    "react-flatpickr": "3.10.13",
     "react-json-formatter": "^0.4.0",
+    "react-router-dom": "^6.25.1",
     "react-scripts": "^5.0.1",
-    "web-vitals": "^2.1.4"
+    "react-syntax-highlighter": "15.5.0",
+    "socket.io": "^4.7.5",
+    "socket.io-client": "^4.7.5",
+    "web-vitals": "3.3.1"
   },
   "scripts": {
     "start": "react-scripts start",
     "start-api": "cd api && venv/bin/quart run --no-debugger",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "lint": "eslint ./src",
+    "prettify": "prettier --write ."
   },
   "eslintConfig": {
     "extends": [
@@ -38,6 +57,15 @@
     ]
   },
   "devDependencies": {
-    "@playwright/test": "^1.45.3"
+    "@playwright/test": "^1.45.3",
+    "ajv": "^7.2.4",
+    "eslint": "8.38.0",
+    "eslint-config-prettier": "8.8.0",
+    "eslint-plugin-import": "2.27.5",
+    "eslint-plugin-jsx-a11y": "6.7.1",
+    "eslint-plugin-prettier": "4.2.1",
+    "eslint-plugin-react": "^7.35.0",
+    "eslint-plugin-react-hooks": "4.6.0",
+    "prettier": "2.8.7"
   }
 }

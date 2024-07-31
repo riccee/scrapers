@@ -7,13 +7,16 @@ import asyncio
 from employees import search
 import requests
 import json
-from collections import OrderedDict
+import socketio
 
 
 app = Quart(__name__)
-cors(app)
+sio = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins='*')
+app.asgi_app = socketio.ASGIApp(sio, app.asgi_app)
+app = cors(app, allow_origin="*")
 
-@app.route('/api/domain_info', methods=['POST'])
+
+@app.route('/api/domain_info', methods=['POST', 'PUT', 'GET'])
 async def get_domain_info():
     competitors = {}
     overview = {}
@@ -55,7 +58,10 @@ async def get_domain_info():
 
             totalVisit = soup.find('p', {"class": "engagement-list__item-value"})
             totalVisit = totalVisit.get_text(strip=True) if totalVisit else ""
-
+            try:
+                await sio.emit('progress', 20)
+            except:
+                pass
             #Competitors
             domains = soup.find_all('a', {"class" : 'wa-competitors-card__website-title'})
             domains = [domain.get_text(strip=True) for domain in domains]
@@ -79,18 +85,25 @@ async def get_domain_info():
 
 
             totalEmployees = []
-            for domain in domains:
+            for idx, domain in enumerate(domains):
                 try:
                     employees = await search(domain)
                     print(employees)
                     totalEmployees.append(employees)
                 except:
                     totalEmployees.append([])
-                print(domain +" done!")
+                try:
+                    await sio.emit('progress', 20 + (idx + 1) * 5)
+                except:
+                    pass
             competitors = [{"domain": domain, "totalVisits" : totalVisit, "categoryId" : categoryId, "categoryRank" : categoryRank, "description": description, "similarity" : similarity, "employees" : employee} for domain, description, totalVisit, categoryId, categoryRank, similarity, employee in zip(domains, descriptions, totalVisits, categoryIds, categoryRanks, similarities, totalEmployees)]
 
             employee = await search(url)
             overview["employees"] = employee
+            try:
+                await sio.emit('progress', 100)
+            except:
+                pass
             response_data= {'overview': overview, 'competitors': competitors}
             return json.dumps(response_data, indent=4)
             #return OrderedDict([('overview', overview), ('competitors', competitors)])
