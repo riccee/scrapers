@@ -1,70 +1,45 @@
 
 'use client';
-import JsonFormatter from 'react-json-formatter'
 import { useState, useEffect } from 'react';
 import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import theme from "assets/theme";
 import MKInput from "components/MKInput";
 import MKButton from "components/MKButton"
-import { io } from 'socket.io-client';
 import MKProgress from "components/MKProgress";
 import OverviewCard from 'components/overviewcard';
 import CompetitorDetails from 'components/competitordetails';
 
-
-
-
 export default function Home() {
-  const [inputValue, setInputValue] = useState('');
-  const [response, setResponse] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [progress, setProgress] = useState(0);
+    const [inputValue, setInputValue] = useState('');
+    const [response, setResponse] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [progress, setProgress] = useState(0);
 
-  useEffect(() => {
-    const socket = new WebSocket('ws://localhost:3000/api/ws');
-    socket.onmessage = (event) => {
-      const data = JSON.parse(event.data)
-      setProgress(data.progress);
-    };
-
-    return () => {
-      socket.close('progress');
-    };
-  }, []);
-
-  const handleSubmit = async(e) => {
-    e.preventDefault();
-
-    setLoading(true);
-   const apiRes = await fetch('/api/domain_info', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ domain: inputValue }),
+    const handleSubmit = async(e) => {
+        e.preventDefault();
+        setLoading(true);
+        const apiRes = await fetch('/api/domain_info', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        body: JSON.stringify({ domain: inputValue }),
     });
-   console.log(apiRes);
-   const data = await apiRes.json();
-   setLoading(false);
-   setResponse(data);
-  };
+    console.log(apiRes);
+    const data = await apiRes.json();
+    setLoading(false);
+    setResponse(data);
+};
 
-
-  const jsonStyle = {
-    propertyStyle: { color: 'black' },
-    stringStyle: { color: 'black' },
-    numberStyle: { color: 'darkorange' }
-  }
-
-  return (
+return (
    <ThemeProvider theme={theme}>
    <CssBaseline /> 
    <div style={{ padding: '20px' }}>
       <form onSubmit={handleSubmit} style={{ display: 'flex', alignItems: 'center' }}>
         <MKInput
           type="text"
-	  label =  "Domain"
+	        label =  "Domain"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           required
