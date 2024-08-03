@@ -1,6 +1,6 @@
 # Web Scraper API and Frontend
 
-My first website and webscraping project! This project provides a web scraper API using Quart and Playwright, with a React-based frontend to interact with the Quart API. The official website is hosted at http://www.riccee.com/.
+My first website and webscraping project! This project provides a web scraper API using Quart and Playwright, with a React-based frontend to interact with the Quart API. The official website is hosted at https://www.riccee.com/.
 ## Features
 
 Scrapes domain information and competitors from SimilarWeb and employee information from theorg.
