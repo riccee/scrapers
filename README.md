@@ -7,14 +7,15 @@ Domain Information Finder is a comprehensive web application designed to retriev
 Domain Information Retrieval: Fetches detailed information about a specified domain from SimilarWeb.
 Competitor Analysis: Provides a list of competitors along with their key metrics and domain-specific data.
 Employee Data Scraping: Retrieves and displays employee information associated with the domain, integrating data from TheOrg.
-Technologies Used
 
-## Frontend:
+## Technologies Used
+
+### Frontend:
 React \
 Material-UI \
 Custom components for UI enhancements 
 
-## Backend:
+### Backend:
 Quart (Python framework for asynchronous web applications) \
 Playwright (for web scraping) \
 BeautifulSoup (for HTML parsing) \
