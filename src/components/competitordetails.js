@@ -16,22 +16,22 @@ function CompetitorDetails({ competitor }) {
           </AccordionSummary>
           <AccordionDetails>
             <Typography variant="body2" color="text.secondary">
-              <strong>{"Domain"}:</strong> {competitor.domain}
+              <strong>{"Domain"}:</strong> {competitor.domain|| 'N/A'}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               <strong>{"Description"}:</strong> {competitor.description|| 'N/A'}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              <strong>{"Category"}:</strong> {competitor.categoryId}
+              <strong>{"Category"}:</strong> {competitor.categoryId || 'N/A'}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              <strong>{"Category Rank"}:</strong> {competitor.categoryRank}
+              <strong>{"Category Rank"}:</strong> {competitor.categoryRank|| 'N/A'}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              <strong>{"Total Visits"}:</strong> {competitor.totalVisits}
+              <strong>{"Total Visits"}:</strong> {competitor.totalVisits|| 'N/A'}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              <strong>{"Similarity"}:</strong> {competitor.similarity}
+              <strong>{"Similarity"}:</strong> {competitor.similarity|| 'N/A'}
             </Typography>
           </AccordionDetails>
         </Accordion>

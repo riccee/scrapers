@@ -1,4 +1,4 @@
-from  quart import Quart, request, jsonify, websocket
+from  quart import Quart, request, jsonify, Response
 from quart_cors import cors
 from urllib.parse import urljoin
 from playwright.async_api import async_playwright
@@ -11,7 +11,7 @@ import keys
 
 
 app = Quart(__name__)
-app = cors(app, allow_origin="*")
+#app = cors(app, allow_origin="*")
 
 async def fetch(session, url, payload, headers):
     async with session.post(url, json=payload, headers=headers) as response:
@@ -75,7 +75,6 @@ async def search_employees(domain):
         await browser.close()
         return employees
 
-
 @app.route('/api/domain_info', methods=['POST'])
 async def get_domain():
     #get the URL from the post request
@@ -93,7 +92,6 @@ async def get_domain():
         try:
             # Open the URL in a new Playwright page
             await page.goto("https://www.similarweb.com/website/"+url+"/competitors/")
-            
             if await page.query_selector('.app-more-less-text__button'):
                 await page.click('.app-more-less-text__button')
 
@@ -111,7 +109,7 @@ async def get_domain():
                 'totalVisits': soup.find('p', {"class": "engagement-list__item-value"}).get_text(strip=True) if soup.find('p', {"class": "engagement-list__item-value"}) else '',
                 'employees': await search_employees(url)            
                 }
-
+            
             #get the competitors overview
             competitors = []
             domains = [d.get_text(strip=True) for d in soup.find_all('a', {"class": 'wa-competitors-card__website-title'})]
@@ -120,10 +118,10 @@ async def get_domain():
             categoryIds = [c.get_text(strip=True) for c in soup.find_all('div', {"class": 'wa-rank-list__info'})][2:][1::2] if len(totalVisits) == 9 else [c.get_text(strip=True) for c in soup.find_all('div', {"class": 'wa-rank-list__info'})][1::2]
             categoryRanks = [r.get_text(strip=True) for r in soup.find_all('p', {"class": "wa-rank-list__value"})][5:][::3]
             similarities = [s.get_text(strip=True) for s in soup.find_all('span', {"class": "app-progress wa-competitors-card__affinity-progress"})]
-
+            
             tasks = [search_employees(domain) for domain in domains]
             totalEmployees = await asyncio.gather(*tasks)
-
+            
             for domain, description, totalVisit, categoryId, categoryRank, similarity, employee in zip(domains, descriptions, totalVisits, categoryIds, categoryRanks, similarities, totalEmployees):
                 competitors.append({
                     "domain": domain,
@@ -136,7 +134,7 @@ async def get_domain():
                 })
 
             response_data= {'overview': domain_info, 'competitors': competitors}
-            print(json.dumps(response_data, indent=4))
+
             return json.dumps(response_data, indent=4)
 
         except Exception as e:

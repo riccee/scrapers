@@ -47,6 +47,7 @@ return (
         />
         <MKButton variant = "gradient" color = "info" type="submit" style={{ padding: '10px' }} disabled={loading}>{loading ? 'Submitting...' : 'Submit'}</MKButton>
       </form>
+      {loading && <MKProgress value={progress} />}
       {response && < OverviewCard overview={response.overview} />}
       {response && response.competitors.map((competitor) => (
         <CompetitorDetails key={competitor.domain} competitor={competitor} />

@@ -16,25 +16,25 @@ function OverviewCard({ overview }) {
           </AccordionSummary>
           <AccordionDetails>
             <Typography variant="body2" color="text.secondary">
-              <strong>{"Domain"}:</strong> {overview.domain}
+              <strong>{"Domain"}:</strong> {overview.domain|| 'N/A'}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               <strong>{"Description"}:</strong> {overview.description|| 'N/A'}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              <strong>{"Global Rank"}:</strong> {overview.globalRank}
+              <strong>{"Global Rank"}:</strong> {overview.globalRank|| 'N/A'}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              <strong>{"Global Rank Change"}:</strong> {overview.globalRankChange}
+              <strong>{"Global Rank Change"}:</strong> {overview.globalRankChange|| 'N/A'}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              <strong>{"Country"}:</strong> {overview.country}
+              <strong>{"Country"}:</strong> {overview.country|| 'N/A'}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              <strong>{"Country Rank"}:</strong> {overview.countryRank}
+              <strong>{"Country Rank"}:</strong> {overview.countryRank|| 'N/A'}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              <strong>{"Total totalVisits"}:</strong> {overview.totalVisits}
+              <strong>{"Total totalVisits"}:</strong> {overview.totalVisits|| 'N/A'}
             </Typography>
           </AccordionDetails>
         </Accordion>
