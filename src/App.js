@@ -1,6 +1,7 @@
 'use client';
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AppBar, Toolbar, IconButton, Typography, Button, Box, Container } from '@mui/material';
+import { v4 as uuidv4 } from 'uuid';
 import MenuIcon from '@mui/icons-material/Menu';
 import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -12,50 +13,86 @@ import CompetitorDetails from 'components/competitordetails';
 import Skeleton from "@mui/material/Skeleton";
 import logo from "logo"
 import MKAvatar from "components/MKAvatar";
+import Slide from '@mui/material/Slide';
+import useScrollTrigger from '@mui/material/useScrollTrigger';
+import MKProgress from "components/MKProgress";
 
 export default function Home() {
     const [inputValue, setInputValue] = useState('');
     const [response, setResponse] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [progress, setProgress] = useState(0);
+    const [connectionId, setConnectionId] = useState(uuidv4());
+    const trigger = useScrollTrigger();
+
+    useEffect(() => {
+        let ws;
+        if (loading) {
+            ws = new WebSocket("wss://riccee.com/api/ws");
+            ws.onopen = () => {
+                ws.send(connectionId);
+            };
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                console.log(data);
+                setProgress(data.progress);
+                if (data.progress === 100) {
+                    setLoading(false);
+                }
+            };
+            ws.onclose = () => {
+                console.log('WebSocket connection closed');
+            };
+        }
+        return () => {
+            if (ws) {
+                ws.close();
+            }
+        };
+    }, [loading]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
+        setProgress(10)
         const apiRes = await fetch('/api/domain_info', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ domain: inputValue }),
+            body: JSON.stringify({ domain: inputValue, connection_id: connectionId  }),
         });
         const data = await apiRes.json();
-        setLoading(false);
+        setLoading(false)
         setResponse(data);
     };
+
 
     return (
         <ThemeProvider theme={theme}>
             <CssBaseline />
-            <AppBar position="sticky" style={{ backgroundColor: '#6ad5e6' }}>
-                <Container maxWidth="lg">
-                    <Toolbar disableGutters>
-                        <MKAvatar src={logo} alt="Logo" bgcolor='primary' style={{ width: '90px', height: '90px' }} variant="square"/>
-                        <Box sx={{ display: { xs: 'none', md: 'block' } }}>
-                            <MKButton variant="text" style={{ color: '#344767' }}> Home </MKButton>
-                            <MKButton variant="text" style={{ color: '#344767' }}> Pricing </MKButton>
-                            <MKButton variant="text" style={{ color: '#344767' }}> Contact </MKButton>
-                        </Box>
-                        <IconButton
-                            style={{ color: '#344767' }}
-                            aria-label="menu"
-                            edge="end"
-                            sx={{ display: { xs: 'block', md: 'none' } }}
-                        >
-                            <MenuIcon />
-                        </IconButton>
-                    </Toolbar>
-                </Container>
-            </AppBar>
+            <Slide appear={false} direction="down" in={!trigger}>
+              <AppBar position="sticky" style={{ backgroundColor: '#6ad5e6' }}>
+                  <Container maxWidth="lg">
+                      <Toolbar disableGutters>
+                          <MKAvatar src={logo} alt="Logo" bgcolor='primary' style={{ width: '90px', height: '90px' }} variant="square"/>
+                          <Box sx={{ display: { xs: 'none', md: 'block' } }}>
+                              <MKButton variant="text" style={{ color: '#344767' }}> Home </MKButton>
+                              <MKButton variant="text" style={{ color: '#344767' }}> Pricing </MKButton>
+                              <MKButton variant="text" style={{ color: '#344767' }}> Contact </MKButton>
+                          </Box>
+                          <IconButton
+                              style={{ color: '#344767' }}
+                              aria-label="menu"
+                              edge="end"
+                              sx={{ display: { xs: 'block', md: 'none' } }}
+                          >
+                              <MenuIcon />
+                          </IconButton>
+                      </Toolbar>
+                  </Container>
+              </AppBar>
+            </Slide>
             <Container maxWidth="md">
                 <Box py={4} textAlign="center">
                     <Typography variant="h3" gutterBottom>
@@ -80,7 +117,9 @@ export default function Home() {
                         </MKButton>
                     </form>
                 </Box>
-                
+                {loading && (
+                    <MKProgress value={progress} sx={{ '& .MuiLinearProgress-bar': { backgroundColor: '#344767' } }} label/>
+                )}
                 {loading && (
                     <Box display="flex" flexDirection="column" alignItems="center" py={2}>
                         <Skeleton variant="rectangular" width="80%" height={120} />
