@@ -1,4 +1,4 @@
-from  quart import Quart, request, jsonify, Response
+from  quart import Quart, request, jsonify, Response, websocket
 from quart_cors import cors
 from urllib.parse import urljoin
 from playwright.async_api import async_playwright
@@ -8,14 +8,33 @@ import asyncio
 import json
 from supabase import create_client, Client
 import keys
+import random
 
 
 app = Quart(__name__)
-#app = cors(app, allow_origin="*")
+
+connections = {}
+message_queue = asyncio.Queue()
+
+@app.websocket('/api/ws')
+async def ws():
+    global message_queue
+    await websocket.accept()
+    connection_id = await websocket.receive()
+    if connection_id:
+        connections[connection_id] = websocket._get_current_object()
+    while True:
+        message = await message_queue.get()
+        await connections[connection_id].send(message)
+        message_queue.task_done()
 
 async def fetch(session, url, payload, headers):
     async with session.post(url, json=payload, headers=headers) as response:
         return await response.json()
+
+async def progress_update(progress):
+    global message_queue
+    await message_queue.put(progress)
 
 async def search_employees(domain):
     #check if domain is in the db
@@ -80,12 +99,14 @@ async def get_domain():
     #get the URL from the post request
     try:
         url = await request.get_json()
+        connection_id = url.get('connection_id')
         url = url.get('domain')
     except:
         return jsonify([])
 
     async with async_playwright() as playwright:
         #setup playwright
+        await progress_update(json.dumps({'progress': 33}))
         browser = await playwright.chromium.launch(headless=True)
         context = await browser.new_context(user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36')
         page = await context.new_page()
@@ -97,7 +118,7 @@ async def get_domain():
 
             #setup bs4
             soup = BeautifulSoup(await page.content())
-            
+            await progress_update(json.dumps({'progress': 45}))
             #get the url overview
             domain_info = {
                 'domain': soup.find('p', {'class': 'wa-overview__title'}).get_text(strip=True) if soup.find('p', {'class': 'wa-overview__title'}) else '',
@@ -109,7 +130,7 @@ async def get_domain():
                 'totalVisits': soup.find('p', {"class": "engagement-list__item-value"}).get_text(strip=True) if soup.find('p', {"class": "engagement-list__item-value"}) else '',
                 'employees': await search_employees(url)            
                 }
-            
+            await progress_update(json.dumps({'progress': 60}))
             #get the competitors overview
             competitors = []
             domains = [d.get_text(strip=True) for d in soup.find_all('a', {"class": 'wa-competitors-card__website-title'})]
@@ -119,9 +140,12 @@ async def get_domain():
             categoryRanks = [r.get_text(strip=True) for r in soup.find_all('p', {"class": "wa-rank-list__value"})][5:][::3]
             similarities = [s.get_text(strip=True) for s in soup.find_all('span', {"class": "app-progress wa-competitors-card__affinity-progress"})]
             
+
+            await progress_update(json.dumps({'progress': 75}))
+
             tasks = [search_employees(domain) for domain in domains]
             totalEmployees = await asyncio.gather(*tasks)
-            
+
             for domain, description, totalVisit, categoryId, categoryRank, similarity, employee in zip(domains, descriptions, totalVisits, categoryIds, categoryRanks, similarities, totalEmployees):
                 competitors.append({
                     "domain": domain,
@@ -134,7 +158,7 @@ async def get_domain():
                 })
 
             response_data= {'overview': domain_info, 'competitors': competitors}
-
+            await progress_update(json.dumps({'progress': 100}))
             return json.dumps(response_data, indent=4)
 
         except Exception as e:
