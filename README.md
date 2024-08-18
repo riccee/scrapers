@@ -1,61 +1,23 @@
-# Web Scraper API and Frontend
+# Domain Information Web Scraper
 
-My first website and webscraping project! This project provides a web scraper API using Quart and Playwright, with a React-based frontend to interact with the Quart API. The official website is hosted at https://www.riccee.com/.
+Domain Information Finder is a comprehensive web application designed to retrieve detailed information about domain names and analyze competitors. This project integrates various technologies including Quart for the backend, React with Material-UI for the frontend, and Playwright for web scraping. The application allows users to input a domain name and obtain valuable insights, including domain details and competitor analysis.
+
 ## Features
 
-Scrapes domain information and competitors from SimilarWeb and employee information from theorg.
-Provides real-time progress updates via WebSockets.
-Displays scraped data using a React frontend.
+Domain Information Retrieval: Fetches detailed information about a specified domain from SimilarWeb.
+Competitor Analysis: Provides a list of competitors along with their key metrics and domain-specific data.
+Employee Data Scraping: Retrieves and displays employee information associated with the domain, integrating data from TheOrg.
 
-## Installation
-Clone the repository:
-```
-git clone https://github.com/riccee/scrapers.git
-cd scrapers
-```
+## Technologies Used
 
-## Backend Setup
+### Frontend:
+React \
+Material-UI \
+Custom components for UI enhancements 
 
-### Prerequisites
-- Python 3.8+ 
-- Quart 
-- Quart-cors 
-- Playwright 
-- BeautifulSoup 
-
-
-### Install dependencies:
-```
-pip3 install quart quart-cors playwright beautifulsoup4
-playwright install
-```
-### Run the api:
-```
-quart run
-```
-
-## Frontend Setup
-
-### Prerequisites
-- Node.js
-- Yarn
-- React
-
-### Installation
-```
-yarn install
-```
-
-### Start the development server:
-```
-react-scripts start
-```
-
-## Usage
-Open your browser and navigate to http://localhost:3000.
-Enter a domain name and submit.
-View the progress and results.
-
-## Acknowledgements
-Thanks to the Quart, Playwright, and React teams for their awesome libraries. I've had an amazing time making this project.
-
+### Backend:
+Quart (Python framework for asynchronous web applications) \
+Playwright (for web scraping) \
+BeautifulSoup (for HTML parsing) \
+aiohttp (for asynchronous HTTP requests) \
+Supabase (for database management)
