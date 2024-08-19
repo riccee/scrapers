@@ -8,33 +8,32 @@ import asyncio
 import json
 from supabase import create_client, Client
 import keys
-import random
 
 
 app = Quart(__name__)
 
 connections = {}
-message_queue = asyncio.Queue()
 
 @app.websocket('/api/ws')
 async def ws():
-    global message_queue
-    await websocket.accept()
+    global connections
     connection_id = await websocket.receive()
     if connection_id:
-        connections[connection_id] = websocket._get_current_object()
-    while True:
-        message = await message_queue.get()
-        await connections[connection_id].send(message)
-        message_queue.task_done()
+        connections[connection_id] = [websocket._get_current_object(), 10]
+    try:
+        while True:
+            await connections[connection_id][0].receive()
+    except asyncio.CancelledError:
+        raise
+    except Exception as e:
+        print(f"WebSocket connection closed with error: {e}")
+    finally:    
+        if connection_id in connections:
+            del connections[connection_id]
 
 async def fetch(session, url, payload, headers):
     async with session.post(url, json=payload, headers=headers) as response:
         return await response.json()
-
-async def progress_update(progress):
-    global message_queue
-    await message_queue.put(progress)
 
 async def search_employees(domain):
     #check if domain is in the db
@@ -78,7 +77,7 @@ async def search_employees(domain):
         page = await context.new_page()
         await page.goto("https://theorg.com/org/"+slug+"/")
 
-        soup = BeautifulSoup(await page.content(), "html.parser")
+        soup = BeautifulSoup(await page.content(), features="html.parser")
         
         users = [user.get_text(strip=True) for user in soup.find_all('span', {'class':'PositionCard_name__iERDX'})]
 
@@ -96,6 +95,8 @@ async def search_employees(domain):
 
 @app.route('/api/domain_info', methods=['POST'])
 async def get_domain():
+    global connections
+
     #get the URL from the post request
     try:
         url = await request.get_json()
@@ -103,10 +104,19 @@ async def get_domain():
         url = url.get('domain')
     except:
         return jsonify([])
+    
+    while True:
+        if connection_id in connections:
+            break
+        await asyncio.sleep(0.1)
+    
+    await connections[connection_id][0].send(json.dumps({'progress': connections[connection_id][1]}))
 
     async with async_playwright() as playwright:
         #setup playwright
-        await progress_update(json.dumps({'progress': 33}))
+
+        await connections[connection_id][0].send(json.dumps({'progress': connections[connection_id][1]+20}))
+
         browser = await playwright.chromium.launch(headless=True)
         context = await browser.new_context(user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36')
         page = await context.new_page()
@@ -117,8 +127,8 @@ async def get_domain():
                 await page.click('.app-more-less-text__button')
 
             #setup bs4
-            soup = BeautifulSoup(await page.content())
-            await progress_update(json.dumps({'progress': 45}))
+            soup = BeautifulSoup(await page.content(), features="html.parser")
+            await connections[connection_id][0].send(json.dumps({'progress': connections[connection_id][1]+40}))
             #get the url overview
             domain_info = {
                 'domain': soup.find('p', {'class': 'wa-overview__title'}).get_text(strip=True) if soup.find('p', {'class': 'wa-overview__title'}) else '',
@@ -130,7 +140,7 @@ async def get_domain():
                 'totalVisits': soup.find('p', {"class": "engagement-list__item-value"}).get_text(strip=True) if soup.find('p', {"class": "engagement-list__item-value"}) else '',
                 'employees': await search_employees(url)            
                 }
-            await progress_update(json.dumps({'progress': 60}))
+            await connections[connection_id][0].send(json.dumps({'progress': connections[connection_id][1]+60}))
             #get the competitors overview
             competitors = []
             domains = [d.get_text(strip=True) for d in soup.find_all('a', {"class": 'wa-competitors-card__website-title'})]
@@ -141,7 +151,7 @@ async def get_domain():
             similarities = [s.get_text(strip=True) for s in soup.find_all('span', {"class": "app-progress wa-competitors-card__affinity-progress"})]
             
 
-            await progress_update(json.dumps({'progress': 75}))
+            await connections[connection_id][0].send(json.dumps({'progress': connections[connection_id][1]+80}))
 
             tasks = [search_employees(domain) for domain in domains]
             totalEmployees = await asyncio.gather(*tasks)
@@ -158,7 +168,7 @@ async def get_domain():
                 })
 
             response_data= {'overview': domain_info, 'competitors': competitors}
-            await progress_update(json.dumps({'progress': 100}))
+            await connections[connection_id][0].send(json.dumps({'progress': 100}))
             return json.dumps(response_data, indent=4)
 
         except Exception as e:
