@@ -12,31 +12,35 @@ import keys
 
 app = Quart(__name__)
 
-connections = {}
+connections = {}    
 
 @app.websocket('/api/ws')
 async def ws():
-    global connections
+    # Get connetion ID from client and add connection to connections dict
     connection_id = await websocket.receive()
+    await websocket.send(connection_id)
     if connection_id:
         connections[connection_id] = [websocket._get_current_object(), 10]
+
+    # Keep connection alive and handle connection health
     try:
         while True:
             await connections[connection_id][0].receive()
     except asyncio.CancelledError:
         raise
     except Exception as e:
-        print(f"WebSocket connection closed with error: {e}")
+        app.logger.info(f"WebSocket connection closed with error: {e}")
     finally:    
         if connection_id in connections:
             del connections[connection_id]
 
+# Fetch function for asycronous https requests
 async def fetch(session, url, payload, headers):
     async with session.post(url, json=payload, headers=headers) as response:
         return await response.json()
 
 async def search_employees(domain):
-    #check if domain is in the db
+    # Check if domain is in the db
     url = keys.url
     key= keys.key
     supabase: Client = create_client(url, key) 
@@ -44,9 +48,7 @@ async def search_employees(domain):
     if response.data:
         return json.loads(response.data[0]["employees"])
 
-    #if not in db, scrape the data from theorg
-        
-    # get the slug from domain name
+    # Get the slug from domain name for scraping theOrg
     url = "https://prod-graphql-api.theorg.com/graphql"
     payload = {
         "query": "query search($query: String!) { searchCompanies(query: $query) { id slug name type status extension verificationType verified logoImage { ...ImageFragment __typename } __typename } } fragment ImageFragment on Image { endpoint ext uri versions __typename }",
@@ -67,6 +69,7 @@ async def search_employees(domain):
         except (KeyError, IndexError):
             return []
     
+    # Scrape theOrg
     async with async_playwright() as playwright:
         browser = await playwright.chromium.launch(headless=True)
         context = await browser.new_context()
@@ -86,7 +89,7 @@ async def search_employees(domain):
         total = dict(zip(users, positions))
         employees = {key: value for key, value in total.items()}
 
-        #push to database
+        # Push to database
         if employees:
             data, count = supabase.table('Employees').insert({"domain": domain, "employees": employees}).execute() 
         
@@ -95,9 +98,7 @@ async def search_employees(domain):
 
 @app.route('/api/domain_info', methods=['POST'])
 async def get_domain():
-    global connections
-
-    #get the URL from the post request
+    # Get the URL and connection_id from the post request
     try:
         url = await request.get_json()
         connection_id = url.get('connection_id')
@@ -105,11 +106,13 @@ async def get_domain():
     except:
         return jsonify([])
     
+    # Make sure connection_id is in the dict
     while True:
         if connection_id in connections:
             break
         await asyncio.sleep(0.1)
     
+    #Push progress to client
     await connections[connection_id][0].send(json.dumps({'progress': connections[connection_id][1]}))
 
     async with async_playwright() as playwright:
@@ -126,10 +129,11 @@ async def get_domain():
             if await page.query_selector('.app-more-less-text__button'):
                 await page.click('.app-more-less-text__button')
 
-            #setup bs4
+            # Setup bs4
             soup = BeautifulSoup(await page.content(), features="html.parser")
             await connections[connection_id][0].send(json.dumps({'progress': connections[connection_id][1]+40}))
-            #get the url overview
+
+            # Get the url overview
             domain_info = {
                 'domain': soup.find('p', {'class': 'wa-overview__title'}).get_text(strip=True) if soup.find('p', {'class': 'wa-overview__title'}) else '',
                 'description': soup.find('div', {"class": "app-more-less-text"}).get_text(strip=True).replace("Show less", "").strip() if soup.find('div', {"class": "app-more-less-text"}) else '',
@@ -141,7 +145,8 @@ async def get_domain():
                 'employees': await search_employees(url)            
                 }
             await connections[connection_id][0].send(json.dumps({'progress': connections[connection_id][1]+60}))
-            #get the competitors overview
+            
+            # Get the competitors overview
             competitors = []
             domains = [d.get_text(strip=True) for d in soup.find_all('a', {"class": 'wa-competitors-card__website-title'})]
             descriptions = [d.get_text(strip=True) for d in soup.find_all('p', {"class": 'wa-competitors-card__website-description'}, {'data-test': "total-visits"})]
@@ -153,9 +158,11 @@ async def get_domain():
 
             await connections[connection_id][0].send(json.dumps({'progress': connections[connection_id][1]+80}))
 
+            # Search employees for every competitor
             tasks = [search_employees(domain) for domain in domains]
             totalEmployees = await asyncio.gather(*tasks)
 
+            # Format Json
             for domain, description, totalVisit, categoryId, categoryRank, similarity, employee in zip(domains, descriptions, totalVisits, categoryIds, categoryRanks, similarities, totalEmployees):
                 competitors.append({
                     "domain": domain,
