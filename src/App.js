@@ -129,6 +129,12 @@ export default function Home() {
                 {response && (
                     <>
                         <Typography variant="h4" gutterBottom>
+                            Summary
+                        </Typography>
+                        <Typography variant="body1" gutterBottom>
+                            {response.summary}
+                        </Typography>
+                        <Typography variant="h4" gutterBottom>
                                 Target Company Analysis
                         </Typography>
                         <OverviewCard overview={response.overview} />
